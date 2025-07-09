@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical Applications of the Self-Declaration Checklist</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Button styling using new brand colours */
+        #roll-button, #restart-button {
+            background-color: #d98e04; /* Dark Orange */
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            border-radius: 0.75rem; /* Rounded corners for buttons */
+            padding: 0.75rem 1.5rem; /* Padding for buttons */
+            font-weight: 600; /* Semi-bold text */
+            color: white; /* White text for buttons */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for buttons */
+        }
+
+        #roll-button:hover, #restart-button:hover {
+            background-color: #f2d98d; /* Light Yellow/Gold on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+
+        /* Animations for content transition */
+        @keyframes slide-out-up {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100%); opacity: 0; }
+        }
+
+        @keyframes slide-in-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Background pulse animation for the content display area */
+        @keyframes pulse-bg {
+            0% { background-color: #f2f2f2; } /* Light Grey */
+            50% { background-color: #cceef2; } /* Lighter version of #96ccd9 for pulse */
+            100% { background-color: #f2f2f2; }
+        }
+
+        .animate-slide-out-up {
+            animation: slide-out-up 0.5s forwards;
+        }
+
+        .animate-slide-in-up {
+            animation: slide-in-up 0.5s forwards;
+        }
+
+        .pulse-background {
+            animation: pulse-bg 1s;
+        }
+
+        /* Specific styling for the main container and content display */
+        .main-container {
+            background-color: #f2f2f2; /* Light Grey */
+            border-radius: 1.5rem; /* More rounded corners for main container */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+        }
+
+        .tube-container {
+            border-color: #96ccd9; /* Light Blue/Cyan for border */
+            background-color: #f2f2f2; /* Light Grey for tube background */
+        }
+
+        .content-heading {
+            color: #025159; /* Dark Teal for content headings */
+        }
+
+        .content-text {
+            color: #025159; /* Dark Teal for content text */
+        }
+
+        .progress-text {
+            color: #025159; /* Dark Teal for progress text */
+        }
+    </style>
+</head>
+<body class="bg-[#96ccd9] min-h-screen flex items-center justify-center p-4">
+    <div class="main-container p-6 w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-[#025159]">Practical Applications of the Self-Declaration Checklist</h1>
+
+        <!-- Progress Tracker -->
+        <div id="progress" class="text-center text-sm mb-2 font-medium progress-text"></div>
+
+        <!-- Tube Container -->
+        <div id="tube-container" class="tube-container relative overflow-hidden h-64 rounded-xl border-2 p-4 flex items-center justify-center">
+            <div id="content-display" class="absolute w-full h-full flex flex-col justify-start items-center text-center px-4"></div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-8 flex flex-col gap-4">
+            <button id="roll-button" class="py-3 rounded-xl text-white font-semibold">Next Application</button>
+            <button id="restart-button" class="py-3 rounded-xl text-white font-semibold hidden">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        // Content for the rolling activity, structured by category (application title) and items (description)
+        const applicationContent = [
+            {
+                category: "Structured Meeting Agenda for Initial Discussions",
+                items: [
+                    "Consultants can directly utilise the headings from pages 1-4, such as 'Client's Current Situation,' 'Client's Objectives,' 'Why the Work Needs to Be Done,' 'Assumptions and their Impact,' and 'Scope and Limits of the Assignment,' to form a logical and comprehensive agenda for their initial client meetings."
+                ]
+            },
+            {
+                category: "Client Briefing / Discovery Questionnaire Template",
+                items: [
+                    "These sections can be converted into a pre-meeting document or online form for new clients to complete. It would prompt them to articulate details regarding their 'Background Information,' 'Objectives,' 'Reasons for the Work,' and initial thoughts on 'Scope and Limits.'"
+                ]
+            },
+            {
+                category: "Internal Project Scoping and Preparation Tool",
+                items: [
+                    "Prior to client engagement, consultants can use these pages for internal analysis. They can reflect on what is known or needs to be discovered about the client's 'Objectives,' 'Assumptions,' and potential 'Scope Boundaries' to prepare for more targeted discussions."
+                ]
+            },
+            {
+                category: "Structuring Proposals and Terms of Reference (TOR)",
+                items: [
+                    "The headings and sub-points from these pages, including 'Context,' 'Services and Deliverables,' and 'Approach and Work Plan,' provide a ready-made framework for drafting comprehensive proposals or Terms of Reference documents."
+                ]
+            }
+        ];
+
+        const contentDisplay = document.getElementById('content-display');
+        const rollButton = document.getElementById('roll-button');
+        const restartButton = document.getElementById('restart-button');
+        const progressDisplay = document.getElementById('progress');
+        const tubeContainer = document.getElementById('tube-container');
+
+        let currentIndex = 0; // Tracks the current application being displayed
+
+        /**
+         * Updates the progress display text based on the current application.
+         */
+        function updateProgress() {
+            progressDisplay.textContent = `Application ${currentIndex + 1} of ${applicationContent.length}`;
+        }
+
+        /**
+         * Displays the content for the given application index with animation.
+         * @param {number} index The index of the application in the applicationContent array to display.
+         */
+        function showContent(index) {
+            const applicationData = applicationContent[index]; // Get the entire application data
+
+            // Build the HTML for all items within the current application
+            // Assuming each application has only one main item/description
+            let itemsHtml = applicationData.items.map(item => `<p class="text-base mb-1 content-text">${item}</p>`).join('');
+
+            // Create a new div element for the incoming content
+            const newContent = document.createElement('div');
+            newContent.className = 'absolute w-full h-full flex flex-col justify-start items-center text-center px-4 pt-4 animate-slide-in-up overflow-y-auto';
+            newContent.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-3 content-heading">${applicationData.category}</h2>
+                <div class="text-left w-full px-4">${itemsHtml}</div>
+            `;
+
+            const oldContent = contentDisplay.firstElementChild; // Get the currently displayed content
+
+            if (oldContent) {
+                // If there's old content, animate it out
+                oldContent.classList.add('animate-slide-out-up');
+
+                const handleAnimationEnd = () => {
+                    oldContent.removeEventListener('animationend', handleAnimationEnd); // Clean up listener
+                    if (contentDisplay.contains(oldContent)) { // Check if it's still a child
+                        contentDisplay.removeChild(oldContent);
+                    }
+                    contentDisplay.appendChild(newContent);
+                    tubeContainer.classList.add('pulse-background');
+                    setTimeout(() => {
+                        tubeContainer.classList.remove('pulse-background');
+                    }, 1000); // Remove pulse class after 1 second
+                };
+                oldContent.addEventListener('animationend', handleAnimationEnd);
+
+                // Fallback timeout in case animationend doesn't fire
+                setTimeout(() => {
+                    if (oldContent.classList.contains('animate-slide-out-up') && !contentDisplay.contains(newContent)) {
+                        oldContent.removeEventListener('animationend', handleAnimationEnd);
+                        if (contentDisplay.contains(oldContent)) {
+                            contentDisplay.removeChild(oldContent);
+                        }
+                        contentDisplay.appendChild(newContent);
+                        tubeContainer.classList.add('pulse-background');
+                        setTimeout(() => {
+                            tubeContainer.classList.remove('pulse-background');
+                        }, 1000);
+                    }
+                }, 600); // Slightly longer than animation duration
+            } else {
+                // If no old content (initial load), just append the new content
+                contentDisplay.appendChild(newContent);
+            }
+
+            updateProgress(); // Update the progress tracker
+        }
+
+        // Event listener for the "Next Application" button
+        rollButton.addEventListener('click', () => {
+            // Disable the button immediately to prevent multiple rapid clicks
+            rollButton.disabled = true;
+
+            // Check if there are more applications to display
+            if (currentIndex < applicationContent.length - 1) {
+                currentIndex++; // Move to the next application
+                showContent(currentIndex); // Display the next application
+
+                // Re-enable button after a delay that covers both animations
+                setTimeout(() => {
+                    rollButton.disabled = false;
+                }, 1100); // 0.5s slide-out + 0.5s slide-in + small buffer
+
+                // If this is the last application, hide the "Next Application" button and show "Start Over"
+                if (currentIndex === applicationContent.length - 1) {
+                    rollButton.classList.add('hidden');
+                    restartButton.classList.remove('hidden');
+                }
+            } else {
+                rollButton.disabled = false; // Re-enable if no progression
+            }
+        });
+
+        // Event listener for the "Start Over" button
+        restartButton.addEventListener('click', () => {
+            currentIndex = 0; // Reset index to the first application
+            showContent(currentIndex); // Display the first application
+            // Hide the "Start Over" button and show "Next Application" button
+            restartButton.classList.add('hidden');
+            rollButton.classList.remove('hidden');
+        });
+
+        // Initial load: display the first application when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            showContent(currentIndex);
+        });
+    </script>
+</body>
+</html>
