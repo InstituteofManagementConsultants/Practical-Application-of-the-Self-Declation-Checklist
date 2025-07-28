@@ -71,6 +71,7 @@
         .tube-container {
             border-color: #96ccd9; /* Light Blue/Cyan for border */
             background-color: #f2f2f2; /* Light Grey for tube background */
+            position: relative; /* Ensure relative positioning for absolute child */
         }
 
         .content-heading {
@@ -177,7 +178,8 @@
 
         <!-- Tube Container -->
         <div id="tube-container" class="tube-container relative overflow-hidden h-64 rounded-xl border-2 p-4 flex items-center justify-center">
-            <div id="content-display" class="absolute w-full h-full flex flex-col justify-start items-center text-center px-4"></div>
+            <!-- This div will hold the actual content and be replaced -->
+            <div id="current-content" class="absolute w-full h-full flex flex-col justify-start items-center text-center px-4"></div>
         </div>
 
         <!-- Next Arrow Button (outside tube-container) -->
@@ -222,13 +224,12 @@
             }
         ];
 
-        const contentDisplay = document.getElementById('content-display');
+        const contentDisplay = document.getElementById('current-content'); // Renamed from content-display to current-content
         const prevArrow = document.getElementById('prev-arrow');
         const nextArrow = document.getElementById('next-arrow');
-        const rollButton = document.getElementById('roll-button'); // Get the Next Application button
+        const rollButton = document.getElementById('roll-button');
         const progressDisplay = document.getElementById('progress');
         const tubeContainer = document.getElementById('tube-container');
-        const mainContainer = document.querySelector('.main-container'); // Get the main container
 
         let currentIndex = 0; // Tracks the current application being displayed
 
@@ -249,49 +250,47 @@
          * @param {string} [direction='next'] The direction of the animation ('next' for forward, 'prev' for backward).
          */
         function showContent(index, direction = 'next') {
-            const applicationData = applicationContent[index]; // Get the entire application data
+            const applicationData = applicationContent[index];
 
-            // Build the HTML for all items within the current application
+            // Build the HTML for the new content
             let itemsHtml = applicationData.items.map(item => `<p class="text-base mb-1 content-text">${item}</p>`).join('');
-
-            // Create a new div element for the incoming content
-            const newContent = document.createElement('div');
-            // Determine animation class based on direction for incoming content
-            const animationClass = direction === 'next' ? 'animate-slide-in-up' : 'animate-slide-in-down';
-            newContent.className = `absolute w-full h-full flex flex-col justify-start items-center text-center px-4 pt-4 ${animationClass} overflow-y-auto`;
-            newContent.innerHTML = `
+            const newContentHtml = `
                 <h2 class="text-2xl font-semibold mb-3 content-heading">${applicationData.category}</h2>
                 <div class="text-left w-full px-4">${itemsHtml}</div>
             `;
 
-            const oldContent = contentDisplay.firstElementChild; // Get the currently displayed content
+            const oldContentDiv = contentDisplay.firstElementChild; // Get the currently displayed content element
 
-            if (oldContent) {
-                // Determine animation class for old content based on direction
+            if (oldContentDiv) {
+                // Apply the slide-out animation to the old content
                 const oldAnimationClass = direction === 'next' ? 'animate-slide-out-up' : 'animate-slide-out-down';
-                oldContent.classList.add(oldAnimationClass);
+                oldContentDiv.classList.add(oldAnimationClass);
 
                 const handleAnimationEnd = () => {
-                    oldContent.removeEventListener('animationend', handleAnimationEnd); // Clean up listener
-                    if (contentDisplay.contains(oldContent)) { // Check if it's still a child before removing
-                        contentDisplay.removeChild(oldContent);
-                    }
-                    contentDisplay.appendChild(newContent); // Append new content after old content is removed
-                    tubeContainer.classList.add('pulse-background'); // Add pulse animation to background
+                    oldContentDiv.removeEventListener('animationend', handleAnimationEnd);
+                    // Once old content has slid out, update the innerHTML with new content
+                    // This will replace the old content and trigger the new content's slide-in animation
+                    contentDisplay.innerHTML = newContentHtml;
+                    const newContentDiv = contentDisplay.firstElementChild; // Get the newly added content div
+                    const newAnimationClass = direction === 'next' ? 'animate-slide-in-up' : 'animate-slide-in-down';
+                    newContentDiv.classList.add(newAnimationClass);
+
+                    // Add pulse background animation to the tube container
+                    tubeContainer.classList.add('pulse-background');
                     setTimeout(() => {
-                        tubeContainer.classList.remove('pulse-background'); // Remove pulse class after 1 second
+                        tubeContainer.classList.remove('pulse-background');
                     }, 1000);
                 };
-                oldContent.addEventListener('animationend', handleAnimationEnd);
+                oldContentDiv.addEventListener('animationend', handleAnimationEnd);
 
-                // Fallback timeout in case animationend doesn't fire (e.g., if element is removed too quickly)
+                // Fallback timeout in case animationend doesn't fire reliably
                 setTimeout(() => {
-                    if (oldContent.classList.contains(oldAnimationClass) && !contentDisplay.contains(newContent)) {
-                        oldContent.removeEventListener('animationend', handleAnimationEnd);
-                        if (contentDisplay.contains(oldContent)) {
-                            contentDisplay.removeChild(oldContent);
-                        }
-                        contentDisplay.appendChild(newContent);
+                    if (oldContentDiv.classList.contains(oldAnimationClass) && contentDisplay.firstElementChild === oldContentDiv) {
+                        oldContentDiv.removeEventListener('animationend', handleAnimationEnd);
+                        contentDisplay.innerHTML = newContentHtml;
+                        const newContentDiv = contentDisplay.firstElementChild;
+                        const newAnimationClass = direction === 'next' ? 'animate-slide-in-up' : 'animate-slide-in-down';
+                        newContentDiv.classList.add(newAnimationClass);
                         tubeContainer.classList.add('pulse-background');
                         setTimeout(() => {
                             tubeContainer.classList.remove('pulse-background');
@@ -299,8 +298,11 @@
                     }
                 }, 600); // Slightly longer than animation duration
             } else {
-                // If no old content (initial load), just append the new content
-                contentDisplay.appendChild(newContent);
+                // Initial load: directly set the innerHTML and apply slide-in animation
+                contentDisplay.innerHTML = newContentHtml;
+                const newContentDiv = contentDisplay.firstElementChild;
+                const newAnimationClass = direction === 'next' ? 'animate-slide-in-up' : 'animate-slide-in-down';
+                newContentDiv.classList.add(newAnimationClass);
             }
 
             updateProgress(); // Update the progress tracker and arrow states
@@ -309,16 +311,16 @@
         // Event listener for the "Next" arrow button
         nextArrow.addEventListener('click', () => {
             if (currentIndex < applicationContent.length - 1) {
-                currentIndex++; // Move to the next application
-                showContent(currentIndex, 'next'); // Display with 'next' animation
+                currentIndex++;
+                showContent(currentIndex, 'next');
             }
         });
 
         // Event listener for the "Previous" arrow button
         prevArrow.addEventListener('click', () => {
             if (currentIndex > 0) {
-                currentIndex--; // Move to the previous application
-                showContent(currentIndex, 'prev'); // Display with 'prev' animation
+                currentIndex--;
+                showContent(currentIndex, 'prev');
             }
         });
 
@@ -332,9 +334,8 @@
 
         // Initial load: display the first application when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
-            showContent(currentIndex); // Display the first application
+            showContent(currentIndex);
         });
     </script>
 </body>
 </html>
-
