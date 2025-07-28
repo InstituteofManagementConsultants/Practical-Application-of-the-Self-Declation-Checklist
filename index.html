@@ -12,22 +12,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Button styling using new brand colours */
-        #roll-button, #restart-button {
-            background-color: #d98e04; /* Dark Orange */
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-            border-radius: 0.75rem; /* Rounded corners for buttons */
-            padding: 0.75rem 1.5rem; /* Padding for buttons */
-            font-weight: 600; /* Semi-bold text */
-            color: white; /* White text for buttons */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for buttons */
-        }
-
-        #roll-button:hover, #restart-button:hover {
-            background-color: #f2d98d; /* Light Yellow/Gold on hover */
-            transform: translateY(-2px); /* Slight lift on hover */
-        }
-
         /* Animations for content transition */
         @keyframes slide-out-up {
             from { transform: translateY(0); opacity: 1; }
@@ -36,6 +20,16 @@
 
         @keyframes slide-in-up {
             from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slide-out-down {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+
+        @keyframes slide-in-down {
+            from { transform: translateY(-100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
@@ -54,6 +48,14 @@
             animation: slide-in-up 0.5s forwards;
         }
 
+        .animate-slide-out-down {
+            animation: slide-out-down 0.5s forwards;
+        }
+
+        .animate-slide-in-down {
+            animation: slide-in-down 0.5s forwards;
+        }
+
         .pulse-background {
             animation: pulse-bg 1s;
         }
@@ -63,6 +65,7 @@
             background-color: #f2f2f2; /* Light Grey */
             border-radius: 1.5rem; /* More rounded corners for main container */
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+            position: relative; /* Added for positioning arrows relative to this container */
         }
 
         .tube-container {
@@ -81,6 +84,81 @@
         .progress-text {
             color: #025159; /* Dark Teal for progress text */
         }
+
+        /* Arrow button styling */
+        .arrow-button {
+            background-color: rgba(217, 142, 4, 0.8); /* Dark Orange with transparency */
+            border-radius: 9999px; /* Fully rounded (circle) */
+            width: 3rem; /* Fixed width */
+            height: 3rem; /* Fixed height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: absolute; /* Changed to absolute for positioning outside tube-container */
+            top: 50%; /* Center vertically */
+            transform: translateY(-50%); /* Adjust for vertical centering */
+            z-index: 20; /* Ensure arrows are above other content */
+        }
+
+        .arrow-button.left-arrow {
+            left: -4rem; /* Position outside the main container to the left */
+        }
+
+        .arrow-button.right-arrow {
+            right: -4rem; /* Position outside the main container to the right */
+        }
+
+        .arrow-button:hover:not(:disabled) {
+            background-color: #f2d98d; /* Light Yellow/Gold on hover */
+            transform: translateY(-50%) scale(1.05); /* Slightly enlarge on hover, maintain vertical center */
+        }
+
+        .arrow-button:disabled {
+            background-color: rgba(217, 142, 4, 0.4); /* Lighter orange when disabled */
+            cursor: not-allowed;
+        }
+
+        .arrow-button svg {
+            fill: white; /* White arrow icon */
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        /* Button styling using new brand colours */
+        #roll-button {
+            background-color: #d98e04; /* Dark Orange */
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            border-radius: 0.75rem; /* Rounded corners for buttons */
+            padding: 0.75rem 1.5rem; /* Padding for buttons */
+            font-weight: 600; /* Semi-bold text */
+            color: white; /* White text for buttons */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for buttons */
+        }
+
+        #roll-button:hover {
+            background-color: #f2d98d; /* Light Yellow/Gold on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+
+        #roll-button:disabled {
+            background-color: rgba(217, 142, 4, 0.4); /* Lighter orange when disabled */
+            cursor: not-allowed;
+        }
+
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .arrow-button.left-arrow {
+                left: 0.5rem; /* Adjust position for smaller screens */
+            }
+
+            .arrow-button.right-arrow {
+                right: 0.5rem; /* Adjust position for smaller screens */
+            }
+        }
     </style>
 </head>
 <body class="bg-[#96ccd9] min-h-screen flex items-center justify-center p-4">
@@ -90,15 +168,28 @@
         <!-- Progress Tracker -->
         <div id="progress" class="text-center text-sm mb-2 font-medium progress-text"></div>
 
+        <!-- Previous Arrow Button (outside tube-container) -->
+        <button id="prev-arrow" class="arrow-button left-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+
         <!-- Tube Container -->
         <div id="tube-container" class="tube-container relative overflow-hidden h-64 rounded-xl border-2 p-4 flex items-center justify-center">
             <div id="content-display" class="absolute w-full h-full flex flex-col justify-start items-center text-center px-4"></div>
         </div>
 
-        <!-- Buttons -->
-        <div class="mt-8 flex flex-col gap-4">
+        <!-- Next Arrow Button (outside tube-container) -->
+        <button id="next-arrow" class="arrow-button right-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+        </button>
+
+        <!-- Next Application Button -->
+        <div class="mt-8 flex justify-center">
             <button id="roll-button" class="py-3 rounded-xl text-white font-semibold">Next Application</button>
-            <button id="restart-button" class="py-3 rounded-xl text-white font-semibold hidden">Start Over</button>
         </div>
     </div>
 
@@ -132,34 +223,42 @@
         ];
 
         const contentDisplay = document.getElementById('content-display');
-        const rollButton = document.getElementById('roll-button');
-        const restartButton = document.getElementById('restart-button');
+        const prevArrow = document.getElementById('prev-arrow');
+        const nextArrow = document.getElementById('next-arrow');
+        const rollButton = document.getElementById('roll-button'); // Get the Next Application button
         const progressDisplay = document.getElementById('progress');
         const tubeContainer = document.getElementById('tube-container');
+        const mainContainer = document.querySelector('.main-container'); // Get the main container
 
         let currentIndex = 0; // Tracks the current application being displayed
 
         /**
          * Updates the progress display text based on the current application.
+         * Also enables/disables the navigation arrows and the "Next Application" button as needed.
          */
         function updateProgress() {
             progressDisplay.textContent = `Application ${currentIndex + 1} of ${applicationContent.length}`;
+            prevArrow.disabled = currentIndex === 0; // Disable previous arrow if on the first item
+            nextArrow.disabled = currentIndex === applicationContent.length - 1; // Disable next arrow if on the last item
+            rollButton.disabled = currentIndex === applicationContent.length - 1; // Disable Next Application button if on the last item
         }
 
         /**
          * Displays the content for the given application index with animation.
          * @param {number} index The index of the application in the applicationContent array to display.
+         * @param {string} [direction='next'] The direction of the animation ('next' for forward, 'prev' for backward).
          */
-        function showContent(index) {
+        function showContent(index, direction = 'next') {
             const applicationData = applicationContent[index]; // Get the entire application data
 
             // Build the HTML for all items within the current application
-            // Assuming each application has only one main item/description
             let itemsHtml = applicationData.items.map(item => `<p class="text-base mb-1 content-text">${item}</p>`).join('');
 
             // Create a new div element for the incoming content
             const newContent = document.createElement('div');
-            newContent.className = 'absolute w-full h-full flex flex-col justify-start items-center text-center px-4 pt-4 animate-slide-in-up overflow-y-auto';
+            // Determine animation class based on direction for incoming content
+            const animationClass = direction === 'next' ? 'animate-slide-in-up' : 'animate-slide-in-down';
+            newContent.className = `absolute w-full h-full flex flex-col justify-start items-center text-center px-4 pt-4 ${animationClass} overflow-y-auto`;
             newContent.innerHTML = `
                 <h2 class="text-2xl font-semibold mb-3 content-heading">${applicationData.category}</h2>
                 <div class="text-left w-full px-4">${itemsHtml}</div>
@@ -168,25 +267,26 @@
             const oldContent = contentDisplay.firstElementChild; // Get the currently displayed content
 
             if (oldContent) {
-                // If there's old content, animate it out
-                oldContent.classList.add('animate-slide-out-up');
+                // Determine animation class for old content based on direction
+                const oldAnimationClass = direction === 'next' ? 'animate-slide-out-up' : 'animate-slide-out-down';
+                oldContent.classList.add(oldAnimationClass);
 
                 const handleAnimationEnd = () => {
                     oldContent.removeEventListener('animationend', handleAnimationEnd); // Clean up listener
-                    if (contentDisplay.contains(oldContent)) { // Check if it's still a child
+                    if (contentDisplay.contains(oldContent)) { // Check if it's still a child before removing
                         contentDisplay.removeChild(oldContent);
                     }
-                    contentDisplay.appendChild(newContent);
-                    tubeContainer.classList.add('pulse-background');
+                    contentDisplay.appendChild(newContent); // Append new content after old content is removed
+                    tubeContainer.classList.add('pulse-background'); // Add pulse animation to background
                     setTimeout(() => {
-                        tubeContainer.classList.remove('pulse-background');
-                    }, 1000); // Remove pulse class after 1 second
+                        tubeContainer.classList.remove('pulse-background'); // Remove pulse class after 1 second
+                    }, 1000);
                 };
                 oldContent.addEventListener('animationend', handleAnimationEnd);
 
-                // Fallback timeout in case animationend doesn't fire
+                // Fallback timeout in case animationend doesn't fire (e.g., if element is removed too quickly)
                 setTimeout(() => {
-                    if (oldContent.classList.contains('animate-slide-out-up') && !contentDisplay.contains(newContent)) {
+                    if (oldContent.classList.contains(oldAnimationClass) && !contentDisplay.contains(newContent)) {
                         oldContent.removeEventListener('animationend', handleAnimationEnd);
                         if (contentDisplay.contains(oldContent)) {
                             contentDisplay.removeChild(oldContent);
@@ -203,47 +303,38 @@
                 contentDisplay.appendChild(newContent);
             }
 
-            updateProgress(); // Update the progress tracker
+            updateProgress(); // Update the progress tracker and arrow states
         }
 
-        // Event listener for the "Next Application" button
-        rollButton.addEventListener('click', () => {
-            // Disable the button immediately to prevent multiple rapid clicks
-            rollButton.disabled = true;
-
-            // Check if there are more applications to display
+        // Event listener for the "Next" arrow button
+        nextArrow.addEventListener('click', () => {
             if (currentIndex < applicationContent.length - 1) {
                 currentIndex++; // Move to the next application
-                showContent(currentIndex); // Display the next application
-
-                // Re-enable button after a delay that covers both animations
-                setTimeout(() => {
-                    rollButton.disabled = false;
-                }, 1100); // 0.5s slide-out + 0.5s slide-in + small buffer
-
-                // If this is the last application, hide the "Next Application" button and show "Start Over"
-                if (currentIndex === applicationContent.length - 1) {
-                    rollButton.classList.add('hidden');
-                    restartButton.classList.remove('hidden');
-                }
-            } else {
-                rollButton.disabled = false; // Re-enable if no progression
+                showContent(currentIndex, 'next'); // Display with 'next' animation
             }
         });
 
-        // Event listener for the "Start Over" button
-        restartButton.addEventListener('click', () => {
-            currentIndex = 0; // Reset index to the first application
-            showContent(currentIndex); // Display the first application
-            // Hide the "Start Over" button and show "Next Application" button
-            restartButton.classList.add('hidden');
-            rollButton.classList.remove('hidden');
+        // Event listener for the "Previous" arrow button
+        prevArrow.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--; // Move to the previous application
+                showContent(currentIndex, 'prev'); // Display with 'prev' animation
+            }
+        });
+
+        // Event listener for the "Next Application" button
+        rollButton.addEventListener('click', () => {
+            if (currentIndex < applicationContent.length - 1) {
+                currentIndex++;
+                showContent(currentIndex, 'next');
+            }
         });
 
         // Initial load: display the first application when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
-            showContent(currentIndex);
+            showContent(currentIndex); // Display the first application
         });
     </script>
 </body>
 </html>
+
